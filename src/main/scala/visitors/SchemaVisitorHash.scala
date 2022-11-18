@@ -1,23 +1,9 @@
 package visitors
 
 import cats.Hash
-import cats.implicits.{
-  catsKernelStdHashForList,
-  catsKernelStdHashForOption,
-  toContravariantOps
-}
-import smithy4s.schema.{
-  Alt,
-  CollectionTag,
-  EnumValue,
-  Field,
-  Primitive,
-  Schema,
-  SchemaAlt,
-  SchemaField,
-  SchemaVisitor
-}
-import smithy4s.{Bijection, Hints, Lazy, Refinement, ShapeId}
+import cats.implicits.{catsKernelStdHashForList, catsKernelStdHashForOption, toContravariantOps}
+import smithy4s.schema.{Alt, CollectionTag, EnumValue, Field, Primitive, Schema, SchemaAlt, SchemaField, SchemaVisitor}
+import smithy4s.{~>, Bijection, Existential, Hints, Lazy, Refinement, ShapeId}
 
 class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
   self =>
@@ -107,7 +93,34 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
       hints: Hints,
       alternatives: Vector[SchemaAlt[U, _]],
       dispatch: Alt.Dispatcher[Schema, U]
-  ): Hash[U] = ???
+  ): Hash[U] = {
+    new Hash[U] {
+
+      override def hash(x: U): Int = {
+        type F[A] = SchemaAlt[U, A]
+        val compileAlt = {
+          new (F ~> Hash) {
+            override def apply[A](fa: SchemaAlt[U, A]): Hash[A] =
+              fa.instance.compile(self)
+          }
+        }
+        val precomputed =
+          compileAlt.unsafeCache(alternatives.map(Existential.wrap(_)))
+
+        def hash[A](altV: Alt.SchemaAndValue[U, A]
+                         ): Int = {
+            precomputed(altV.alt).hash(
+              altV.value
+            )
+
+        }
+        hash(dispatch.underlying(x))
+
+      }
+
+      override def eqv(x: U, y: U): Boolean = self.union(shapeId, hints, alternatives, dispatch).eqv(x, y)
+    }
+  }
 
   override def biject[A, B](
       schema: Schema[A],
