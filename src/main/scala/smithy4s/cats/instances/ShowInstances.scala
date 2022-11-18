@@ -11,7 +11,8 @@ trait ShowInstances {
   implicit val byteArray: Show[ByteArray] = Show.fromToString
   implicit val document: Show[Document] = Show.fromToString
   implicit val ts: Show[Timestamp] = Show.fromToString
-  implicit val primShowPf: PolyFunction[Primitive, Show] = Primitive.deriving[Show]
+  implicit val primShowPf: PolyFunction[Primitive, Show] =
+    Primitive.deriving[Show]
 }
 
 object ShowInstances extends ShowInstances

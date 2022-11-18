@@ -1,0 +1,1 @@
+addCommandAlias("push",";scalafmtAll;clean;compile")

@@ -1,7 +1,5 @@
 package smithy4s.cats
 
-
-
 import cats.effect.IO
 import cats.syntax.all._
 import smithy4s.{ByteArray, Hints, ShapeId, Timestamp}
@@ -14,54 +12,53 @@ object ShowCodecSpec extends FunSuite {
 
   val schemaVisitorShow = new SchemaVisitorShow()
 
-
   test("int") {
     val schema: Schema[Int] = int
     val intValue = 1
-    val showOutput =schemaVisitorShow(schema).show(intValue)
+    val showOutput = schemaVisitorShow(schema).show(intValue)
     expect.eql(showOutput, "1")
   }
 
   test("string") {
     val schema: Schema[String] = string
     val foo = "foo"
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "foo")
   }
 
   test("boolean") {
     val schema: Schema[Boolean] = boolean
     val foo = true
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "true")
   }
 
   test("long") {
     val schema: Schema[Long] = long
     val foo = 1L
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1")
   }
 
   test("short") {
     val schema: Schema[Short] = short
     val foo = 1.toShort
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1")
   }
 
   test("byte") {
     val schema: Schema[Byte] = byte
     val foo = 1.toByte
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1")
-    
+
   }
 
   test("double") {
     val schema: Schema[Double] = double
     val foo = 1.0
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1.0")
 
   }
@@ -69,21 +66,21 @@ object ShowCodecSpec extends FunSuite {
   test("float") {
     val schema: Schema[Float] = float
     val foo = 1.0f
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1.0")
   }
 
   test("bigint") {
     val schema: Schema[BigInt] = bigint
-val foo = BigInt(1)
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val foo = BigInt(1)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1")
   }
 
   test("bigdecimal") {
     val schema: Schema[BigDecimal] = bigdecimal
     val foo = BigDecimal(1)
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, "1")
 
   }
@@ -91,33 +88,45 @@ val foo = BigInt(1)
   test("smithy4s ByteArray") {
     val schema: Schema[ByteArray] = bytes
     val fooBar = ByteArray("fooBar".getBytes)
-    val showOutput =schemaVisitorShow(schema).show(fooBar)
-    println(showOutput)
+    val showOutput = schemaVisitorShow(schema).show(fooBar)
     expect.eql(showOutput, "Zm9vQmFy")
   }
 
   test("smithy4s timestamp") {
     val schema: Schema[Timestamp] = timestamp
-    val now =java.time.Instant.now()
+    val now = java.time.Instant.now()
     val foo = Timestamp.fromEpochSecond(now.getEpochSecond)
-    val showOutput =schemaVisitorShow(schema).show(foo)
+    val showOutput = schemaVisitorShow(schema).show(foo)
     expect.eql(showOutput, foo.toString)
   }
 
-/*  test("struct") {
+  test("struct") {
     case class Foo(x: String, y: Option[String])
     object Foo {
       val schema: Schema[Foo] = {
-        val x = string.required[Foo]("x", _)
-        val y = string.optional[Foo]("y", _.y)
-        struct(x, y)(Foo.apply _)
+        StructSchema(
+          ShapeId("", "Foo"),
+          Hints.empty,
+          Vector(
+            string.required[Foo]("x", _.x),
+            string.optional[Foo]("y", _.y)
+          ),
+          arr =>
+            Foo.apply(
+              arr(0).asInstanceOf[String],
+              arr(1).asInstanceOf[Option[String]]
+            )
+        )
+
       }
     }
     val foo = Foo("foo", Some("bar"))
-    val showOutput =schemaVisitorShow(Foo.schema).show(foo)
+    println(Foo.schema)
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    println(showOutput)
     expect.eql(showOutput, foo.toString)
-  }*/
-/*
+  }
+  /*
   test("struct: empty optional") {
     case class Foo(x: String, y: Option[String])
     object Foo {
@@ -404,7 +413,7 @@ val foo = BigInt(1)
     checkContent(xml, Foo(Map("a" -> 1, "b" -> 2)))
   }*/
 
- /* test("map: flattened") {
+  /* test("map: flattened") {
     case class Foo(foos: Map[String, Int])
     object Foo {
       val schema: Schema[Foo] = {
@@ -416,7 +425,7 @@ val foo = BigInt(1)
       }
     }*/
 
-/*    val xml = """|<Foo>
+  /*    val xml = """|<Foo>
                  |   <foos>
                  |      <key>a</key>
                  |      <value>1</value>
@@ -428,7 +437,7 @@ val foo = BigInt(1)
                  |</Foo>""".stripMargin
     checkContent(xml, Foo(Map("a" -> 1, "b" -> 2)))
   }*/
-/*
+  /*
   test("Document decoding") {
     case class Foo(x: Int)
     object Foo {
@@ -444,7 +453,7 @@ val foo = BigInt(1)
     checkDocument(xml, Foo(1))
   }*/
 
-/*  test("Document decoding: custom name") {
+  /*  test("Document decoding: custom name") {
     case class Foo(x: Int)
     object Foo {
       val schema: Schema[Foo] = {
@@ -459,7 +468,7 @@ val foo = BigInt(1)
     checkDocument(xml, Foo(1))
   }*/
 
- /* test("Document decoding: failure") {
+  /* test("Document decoding: failure") {
     case class Foo(x: Int)
     object Foo {
       val schema: Schema[Foo] = {
@@ -483,10 +492,5 @@ val foo = BigInt(1)
         )
       }
   }*/
-
-
-
-
-
 
 }
