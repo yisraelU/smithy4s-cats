@@ -121,9 +121,7 @@ object ShowCodecSpec extends FunSuite {
       }
     }
     val foo = Foo("foo", Some("bar"))
-    println(Foo.schema)
     val showOutput = schemaVisitorShow(Foo.schema).show(foo)
-    println(showOutput)
     expect.eql(showOutput, foo.toString)
   }
   /*
