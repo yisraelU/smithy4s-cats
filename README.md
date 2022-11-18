@@ -5,3 +5,4 @@ a bunch of Schema Visitor implementations for commonly used typeclasses from the
 # Currently
 - Eq
 - Show
+- Hash

@@ -4,21 +4,10 @@ import cats.implicits.{catsSyntaxEq, toContravariantOps}
 import cats.kernel.Eq
 import smithy4s._
 import smithy4s.schema.{Schema, _}
+import smithy4s.cats.instances.EqInstances._
 
 class SchemaVisitorEq {
 
-  implicit def arrayEq[A: Eq]: Eq[Array[A]] = (x: Array[A], y: Array[A]) =>
-    x.zip(y).forall { case (a, b) => a === b }
-
-  implicit def indexedSeq[A: Eq]: Eq[IndexedSeq[A]] =
-    Eq[Seq[A]].contramap(_.toSeq)
-
-  implicit val byteArrayEq: Eq[ByteArray] = (x: ByteArray, y: ByteArray) =>
-    Eq[Array[Byte]].contramap[ByteArray](_.array).eqv(x, y)
-  implicit val documentEq: Eq[Document] =
-    implicitly[Eq[String]].contramap(_.show)
-  implicit val timeStampEq: Eq[Timestamp] =
-    implicitly[Eq[Long]].contramap(_.epochSecond)
   val visitorEq: SchemaVisitor[Eq] = new SchemaVisitor[Eq] {
     self =>
     override def primitive[P](

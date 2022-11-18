@@ -28,7 +28,7 @@ import smithy4s.{
   Refinement,
   ShapeId
 }
-import smithy4s.cats.SchemaVisitorHash._
+import smithy4s.cats.instances.HashInstances._
 class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
   self =>
 
@@ -166,15 +166,4 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
       override def eqv(x: A, y: A): Boolean = hashA.value.eqv(x, y)
     }
   }
-}
-
-object SchemaVisitorHash {
-  implicit val byteArrayHash: Hash[ByteArray] =
-    Hash[Seq[Byte]].contramap(_.array.toSeq)
-  implicit val documentHash: Hash[smithy4s.Document] =
-    Hash[String].contramap(_.toString)
-  implicit val shapeIdHash: Hash[ShapeId] = Hash[String].contramap(_.toString)
-  implicit val timeStampHash: Hash[Timestamp] =
-    Hash[Long].contramap(_.epochSecond)
-  implicit val primHashPf: ~>[Primitive, Hash] = Primitive.deriving[Hash]
 }

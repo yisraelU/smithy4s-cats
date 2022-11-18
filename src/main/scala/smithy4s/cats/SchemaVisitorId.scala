@@ -1,4 +1,4 @@
-package visitors
+package tests
 
 import cats.Id
 import smithy4s.schema.{
@@ -12,7 +12,7 @@ import smithy4s.schema.{
   SchemaVisitor
 }
 import smithy4s.{Bijection, Hints, Lazy, Refinement, ShapeId}
-import visitors.companion.IdentityFunc
+import tests.companion.IdentityFunc
 
 object companion {
   type IdentityFunc[A] = A => Id[A]
