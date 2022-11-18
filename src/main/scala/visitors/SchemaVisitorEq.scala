@@ -5,7 +5,7 @@ import cats.kernel.Eq
 import smithy4s._
 import smithy4s.schema.{Schema, _}
 
-object SchemaVisitorEq {
+class SchemaVisitorEq {
 
   implicit def arrayEq[A: Eq]: Eq[Array[A]] = (x: Array[A], y: Array[A]) =>
     x.zip(y).forall { case (a, b) => a === b }

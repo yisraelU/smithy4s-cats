@@ -19,7 +19,8 @@ import smithy4s.schema.{
 }
 import smithy4s.{Bijection, Hints, Lazy, Refinement, ShapeId}
 
-object SchemaVisitorHash extends SchemaVisitor[Hash] { self =>
+class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
+  self =>
 
   override def primitive[P](
       shapeId: ShapeId,
@@ -71,31 +72,34 @@ object SchemaVisitorHash extends SchemaVisitor[Hash] { self =>
       fields: Vector[SchemaField[S, _]],
       make: IndexedSeq[Any] => S
   ): Hash[S] = {
+    new Hash[S] {
+      override def hash(x: S): Int = {
+        def forField[A2](field: Field[Schema, S, A2]): Hash[S] = {
+          val hashField: Hash[A2] =
+            field.foldK(new Field.FolderK[Schema, S, Hash]() {
+              override def onRequired[A](
+                  label: String,
+                  instance: Schema[A],
+                  get: S => A
+              ): Hash[A] = self(instance)
 
-    def forField[A2](field: Field[Schema, S, A2]): Hash[S] = {
-      val hashField: Hash[A2] =
-        field.foldK(new Field.FolderK[Schema, S, Hash]() {
-          override def onRequired[A](
-              label: String,
-              instance: Schema[A],
-              get: S => A
-          ): Hash[A] = self(instance)
+              override def onOptional[A](
+                  label: String,
+                  instance: Schema[A],
+                  get: S => Option[A]
+              ): Hash[Option[A]] = {
+                implicit val hashA: Hash[A] = self(instance)
+                Hash[Option[A]]
+              }
+            })
+          hashField.contramap(field.get)
+        }
+        fields.map(field => forField(field)).hashCode()
+      }
+      override def eqv(x: S, y: S): Boolean =
+        self.struct(shapeId, hints, fields, make).eqv(x, y)
 
-          override def onOptional[A](
-              label: String,
-              instance: Schema[A],
-              get: S => Option[A]
-          ): Hash[Option[A]] = {
-            implicit val hashA: Hash[A] = self(instance)
-            Hash[Option[A]]
-          }
-        })
-      hashField.contramap(field.get)
     }
-    fields.map(field => forField(field))
-
-    ???
-
   }
 
   override def union[U](
