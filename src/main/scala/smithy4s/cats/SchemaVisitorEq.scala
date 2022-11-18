@@ -1,4 +1,4 @@
-package visitors
+package smithy4s.cats
 
 import cats.implicits.{catsSyntaxEq, toContravariantOps}
 import cats.kernel.Eq

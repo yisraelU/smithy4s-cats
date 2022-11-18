@@ -1,10 +1,34 @@
-package visitors
+package smithy4s.cats
 
 import cats.Hash
-import cats.implicits.{catsKernelStdHashForList, catsKernelStdHashForOption, toContravariantOps}
-import smithy4s.schema.{Alt, CollectionTag, EnumValue, Field, Primitive, Schema, SchemaAlt, SchemaField, SchemaVisitor}
-import smithy4s.{~>, Bijection, Existential, Hints, Lazy, Refinement, ShapeId}
-
+import cats.implicits.{
+  catsKernelStdHashForList,
+  catsKernelStdHashForOption,
+  toContravariantOps
+}
+import smithy4s.schema.{
+  Alt,
+  CollectionTag,
+  EnumValue,
+  Field,
+  Primitive,
+  Schema,
+  SchemaAlt,
+  SchemaField,
+  SchemaVisitor
+}
+import smithy4s.{
+  ~>,
+  Bijection,
+  Timestamp,
+  ByteArray,
+  Existential,
+  Hints,
+  Lazy,
+  Refinement,
+  ShapeId
+}
+import smithy4s.cats.SchemaVisitorHash._
 class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
   self =>
 
@@ -12,8 +36,7 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
       shapeId: ShapeId,
       hints: Hints,
       tag: Primitive[P]
-  ): Hash[P] =
-    Hash.fromUniversalHashCode[P]
+  ): Hash[P] = primHashPf(tag)
 
   override def collection[C[`2`], A](
       shapeId: ShapeId,
@@ -107,18 +130,16 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
         val precomputed =
           compileAlt.unsafeCache(alternatives.map(Existential.wrap(_)))
 
-        def hash[A](altV: Alt.SchemaAndValue[U, A]
-                         ): Int = {
-            precomputed(altV.alt).hash(
-              altV.value
-            )
+        def hash[A](altV: Alt.SchemaAndValue[U, A]): Int = {
+          precomputed(altV.alt).hash(
+            altV.value
+          )
 
         }
         hash(dispatch.underlying(x))
-
       }
-
-      override def eqv(x: U, y: U): Boolean = self.union(shapeId, hints, alternatives, dispatch).eqv(x, y)
+      override def eqv(x: U, y: U): Boolean =
+        self.union(shapeId, hints, alternatives, dispatch).eqv(x, y)
     }
   }
 
@@ -145,4 +166,15 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
       override def eqv(x: A, y: A): Boolean = hashA.value.eqv(x, y)
     }
   }
+}
+
+object SchemaVisitorHash {
+  implicit val byteArrayHash: Hash[ByteArray] =
+    Hash[Seq[Byte]].contramap(_.array.toSeq)
+  implicit val documentHash: Hash[smithy4s.Document] =
+    Hash[String].contramap(_.toString)
+  implicit val shapeIdHash: Hash[ShapeId] = Hash[String].contramap(_.toString)
+  implicit val timeStampHash: Hash[Timestamp] =
+    Hash[Long].contramap(_.epochSecond)
+  implicit val primHashPf: ~>[Primitive, Hash] = Primitive.deriving[Hash]
 }
