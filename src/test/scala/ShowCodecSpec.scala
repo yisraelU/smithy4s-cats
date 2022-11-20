@@ -124,89 +124,30 @@ object ShowCodecSpec extends FunSuite {
     val showOutput = schemaVisitorShow(Foo.schema).show(foo)
     expect.eql(showOutput, foo.toString)
   }
-  /*
   test("struct: empty optional") {
     case class Foo(x: String, y: Option[String])
     object Foo {
       val schema: Schema[Foo] = {
-        val x = string.required[Foo]("x", _)
-        val y = string.optional[Foo]("y", _.y)
-        struct(x, y)(Foo.apply)
+        StructSchema(
+          ShapeId("", "Foo"),
+          Hints.empty,
+          Vector(
+            string.required[Foo]("x", _.x),
+            string.optional[Foo]("y", _.y)
+          ),
+          arr =>
+            Foo.apply(
+              arr(0).asInstanceOf[String],
+              arr(1).asInstanceOf[Option[String]]
+            )
+        )
+
       }
     }
 
-    val xml = """|<Foo>
-                 |  <x>x</x>
-                 |</Foo>""".stripMargin
-
-    checkContent(xml, Foo("x", None))
-  }
-
-  test("struct: custom names") {
-    case class Foo(x: String, y: Option[String])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x = string.required[Foo]("x", _).addHints(XmlName("xx"))
-        val y = string.optional[Foo]("y", _.y).addHints(XmlName("y:y"))
-        struct(x, y)(Foo.apply)
-      }
-    }
-
-    val xml = """|<Foo>
-                 |  <xx>x</xx>
-                 |  <y:y>y</y:y>
-                 |</Foo>""".stripMargin
-
-    checkContent(xml, Foo("x", Some("y")))
-  }
-
-  test("struct: attributes") {
-    case class Foo(x: String, y: Option[String])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x = string.required[Foo]("x", _).addHints(XmlAttribute())
-        val y = string.optional[Foo]("y", _.y).addHints(XmlAttribute())
-        struct(x, y)(Foo.apply)
-      }
-    }
-
-    val xml = """<Foo x="x" y="y"/>""".stripMargin
-
-    checkContent(xml, Foo("x", Some("y")))
-  }
-
-  test("struct: attributes with custom names") {
-    case class Foo(x: String, y: Option[String])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x =
-          string.required[Foo]("x", _).addHints(XmlName("xx"), XmlAttribute())
-        val y =
-          string.optional[Foo]("y", _.y).addHints(XmlName("yy"), XmlAttribute())
-        struct(x, y)(Foo.apply)
-      }
-    }
-
-    val xml = """<Foo xx="x" yy="y"/>""".stripMargin
-
-    checkContent(xml, Foo("x", Some("y")))
-  }
-
-  test("struct: empty optional attributes") {
-    case class Foo(x: String, y: Option[String])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x =
-          string.required[Foo]("x", _).addHints(XmlAttribute())
-        val y =
-          string.optional[Foo]("y", _.y).addHints(XmlAttribute())
-        struct(x, y)(Foo.apply)
-      }
-    }
-
-    val xml = """<Foo x="x"/>""".stripMargin
-
-    checkContent(xml, Foo("x", None))
+    val foo = Foo("foo", None)
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
   }
 
   test("list") {
@@ -216,77 +157,11 @@ object ShowCodecSpec extends FunSuite {
         val foos = list(int)
           .required[Foo]("foos", _.foos)
         struct(foos)(Foo.apply)
-      }
+      }.withId(ShapeId("", "Foo"))
     }
-
-    val xml = """|<Foo>
-                 |   <foos>
-                 |      <member>1</member>
-                 |      <member>2</member>
-                 |      <member>3</member>
-                 |   </foos>
-                 |</Foo>""".stripMargin
-    checkContent(xml, Foo(List(1, 2, 3)))
-  }
-
-  test("list: custom names") {
-    case class Foo(foos: List[Int])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val foos = list(int.addHints(XmlName("x")))
-          .required[Foo]("foos", _.foos)
-        struct(foos)(Foo.apply)
-      }
-    }
-
-    val xml = """|<Foo>
-                 |   <foos>
-                 |      <x>1</x>
-                 |      <x>2</x>
-                 |      <x>3</x>
-                 |   </foos>
-                 |</Foo>""".stripMargin
-    checkContent(xml, Foo(List(1, 2, 3)))
-  }
-
-  test("list: flattened") {
-    case class Foo(foos: List[Int])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val foos = list(int)
-          .required[Foo]("foos", _.foos)
-          .addHints(XmlFlattened())
-        struct(foos)(Foo.apply)
-      }
-    }
-
-    val xml = """|<Foo>
-                 |   <foos>1</foos>
-                 |   <foos>2</foos>
-                 |   <foos>3</foos>
-                 |</Foo>
-                 |""".stripMargin
-    checkContent(xml, Foo(List(1, 2, 3)))
-  }
-
-  test("list: flattened custom names") {
-    case class Foo(foos: List[Int])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val foos = list(int)
-          .required[Foo]("foos", _.foos)
-          .addHints(XmlFlattened(), XmlName("x"))
-        struct(foos)(Foo.apply)
-      }
-    }
-
-    val xml = """|<Foo>
-                 |   <x>1</x>
-                 |   <x>2</x>
-                 |   <x>3</x>
-                 |</Foo>
-                 |""".stripMargin
-    checkContent(xml, Foo(List(1, 2, 3)))
+    val foo = Foo(List(1, 2, 3))
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
   }
 
   test("recursion") {
@@ -295,49 +170,36 @@ object ShowCodecSpec extends FunSuite {
       val schema: Schema[Foo] = recursive {
         val foos = schema.optional[Foo]("foo", _.foo)
         struct(foos)(Foo.apply)
-      }
+      }.withId(ShapeId("", "Foo"))
     }
 
-    val xml = """|<Foo>
-                 |   <foo>
-                 |      <foo>
-                 |      </foo>
-                 |   </foo>
-                 |</Foo>
-                 |""".stripMargin
-    checkContent(xml, Foo(Some(Foo(Some(Foo(None))))))
+    val foo = Foo(Some(Foo(None)))
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
+
   }
 
   test("union") {
-    type Foo = Either[Int, String]
-    val schema: Schema[Foo] = {
-      val left = int.oneOf[Foo]("left", Left(_))
-      val right = string.oneOf[Foo]("right", Right(_))
-      union(left, right) {
-        case Left(int)     => left(int)
-        case Right(string) => right(string)
-      }
+    sealed trait IntOrString
+    case class IntValue(value: Int) extends IntOrString
+    case class StringValue(value: String) extends IntOrString
+    val schema: Schema[IntOrString] = {
+      val intValue = int.oneOf[IntOrString]("intValue", IntValue(_))
+      val stringValue = string.oneOf[IntOrString]("stringValue", StringValue(_))
+      union(intValue, stringValue) {
+        case IntValue(int)     => intValue(int)
+        case StringValue(string) => stringValue(string)
+      }.withId(ShapeId("", "Foo"))
     }
-    val xmlLeft = """<left>1</left>"""
-    val xmlRight = """<right>hello</right>""".stripMargin
-    checkContent[Foo](xmlLeft, Left(1)) |+|
-      checkContent[Foo](xmlRight, Right("hello"))
-  }
+    val foo0 =IntValue(1)
+    val foo1 = StringValue("foo")
+    val showOutput0 = schemaVisitorShow(schema).show(foo0)
+    val showOutput1 = schemaVisitorShow(schema).show(foo1)
+    expect.eql(showOutput0, "1")
+    expect.eql(showOutput1, "foo")
 
-  test("union: custom names") {
-    type Foo = Either[Int, String]
-    val schema: Schema[Foo] = {
-      val left = int.oneOf[Foo]("left", Left(_)).addHints(XmlName("foo"))
-      val right = string.oneOf[Foo]("right", Right(_)).addHints(XmlName("bar"))
-      union(left, right) {
-        case Left(int)     => left(int)
-        case Right(string) => right(string)
-      }
-    }
-    val xmlLeft = """<foo>1</foo>"""
-    val xmlRight = """<bar>hello</bar>""".stripMargin
-    checkContent[Foo](xmlLeft, Left(1)) |+|
-      checkContent[Foo](xmlRight, Right("hello"))
+
+
   }
 
   test("enumeration") {
@@ -353,11 +215,14 @@ object ShowCodecSpec extends FunSuite {
       val schema: Schema[FooBar] =
         enumeration[FooBar](List(Foo, Bar))
     }
-    val xmlFoo = "<x>foo</x>"
-    val xmlBar = "<x>bar</x>"
-    checkContent[FooBar](xmlFoo, FooBar.Foo) <+>
-      checkContent[FooBar](xmlBar, FooBar.Bar)
+    val foo = FooBar.Foo
+    val showOutput = schemaVisitorShow(FooBar.schema).show(foo)
+    val  bar = FooBar.Bar
+    val showOutput1 = schemaVisitorShow(FooBar.schema).show(bar)
+    expect.eql(showOutput, foo.stringValue)
+    expect.eql(showOutput1, bar.stringValue)
   }
+  /*
 
   test("map") {
     case class Foo(foos: Map[String, Int])
