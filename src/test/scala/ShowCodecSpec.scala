@@ -164,6 +164,62 @@ object ShowCodecSpec extends FunSuite {
     expect.eql(showOutput, foo.toString)
   }
 
+  test("set") {
+    case class Foo(foos: Set[Int])
+    object Foo {
+      val schema: Schema[Foo] = {
+        val foos = set(int)
+          .required[Foo]("foos", _.foos)
+        struct(foos)(Foo.apply)
+      }.withId(ShapeId("", "Foo"))
+    }
+    val foo = Foo(Set(1, 2, 3))
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
+  }
+  test("vector"){
+    case class Foo(foos: Vector[Int])
+    object Foo {
+      val schema: Schema[Foo] = {
+        val foos = vector(int)
+          .required[Foo]("foos", _.foos)
+        struct(foos)(Foo.apply)
+      }.withId(ShapeId("", "Foo"))
+    }
+    val foo = Foo(Vector(1, 2, 3))
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
+  }
+  test("indexedSeq"){
+    case class Foo(foos: IndexedSeq[Int])
+    object Foo {
+      val schema: Schema[Foo] = {
+        val foos = indexedSeq(int)
+          .required[Foo]("foos", _.foos)
+        struct(foos)(Foo.apply)
+      }.withId(ShapeId("", "Foo"))
+    }
+    val foo = Foo(IndexedSeq(1, 2, 3))
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
+  }
+
+  test("map"){
+    case class Foo(foos: Map[String, Int])
+    object Foo {
+      val schema: Schema[Foo] = {
+        val foos = map(string, int)
+          .required[Foo]("foos", _.foos)
+        struct(foos)(Foo.apply)
+      }.withId(ShapeId("", "Foo"))
+    }
+    val foo = Foo(Map("foo" -> 1, "bar" -> 2))
+    val showOutput = schemaVisitorShow(Foo.schema).show(foo)
+    expect.eql(showOutput, foo.toString)
+  }
+
+
+
   test("recursion") {
     case class Foo(foo: Option[Foo])
     object Foo {
@@ -222,138 +278,4 @@ object ShowCodecSpec extends FunSuite {
     expect.eql(showOutput, foo.stringValue)
     expect.eql(showOutput1, bar.stringValue)
   }
-  /*
-
-  test("map") {
-    case class Foo(foos: Map[String, Int])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val foos = map(string, int)
-          .required[Foo]("foos", _.foos)
-          .addHints(XmlName("entries"))
-        struct(foos)(Foo.apply)
-      }
-    }
-
-    val xml = """|<Foo>
-                 |   <entries>
-                 |        <entry>
-                 |            <key>a</key>
-                 |            <value>1</value>
-                 |        </entry>
-                 |        <entry>
-                 |            <key>b</key>
-                 |            <value>2</value>
-                 |        </entry>
-                 |   </entries>
-                 |</Foo>""".stripMargin
-    checkContent(xml, Foo(Map("a" -> 1, "b" -> 2)))
-  }*/
-
-  /*test("map: custom names") {
-    case class Foo(foos: Map[String, Int])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val foos =
-          map(string.addHints(XmlName("k")), int.addHints(XmlName("v")))
-            .required[Foo]("foos", _.foos)
-        struct(foos)(Foo.apply)
-      }
-    }
-
-    val xml = """|<Foo>
-                 |   <foos>
-                 |        <entry>
-                 |            <k>a</k>
-                 |            <v>1</v>
-                 |        </entry>
-                 |        <entry>
-                 |            <k>b</k>
-                 |            <v>2</v>
-                 |        </entry>
-                 |   </foos>
-                 |</Foo>""".stripMargin
-    checkContent(xml, Foo(Map("a" -> 1, "b" -> 2)))
-  }*/
-
-  /* test("map: flattened") {
-    case class Foo(foos: Map[String, Int])
-    object Foo {
-      val schema: Schema[Foo] = {
-        val foos =
-          map(string, int)
-            .required[Foo]("foos", _.foos)
-            .addHints(XmlFlattened())
-        struct(foos)(Foo.apply)
-      }
-    }*/
-
-  /*    val xml = """|<Foo>
-                 |   <foos>
-                 |      <key>a</key>
-                 |      <value>1</value>
-                 |   </foos>
-                 |   <foos>
-                 |      <key>b</key>
-                 |      <value>2</value>
-                 |   </foos>
-                 |</Foo>""".stripMargin
-    checkContent(xml, Foo(Map("a" -> 1, "b" -> 2)))
-  }*/
-  /*
-  test("Document decoding") {
-    case class Foo(x: Int)
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x = int.required[Foo]("x", _)
-        struct(x)(Foo.apply)
-      }.withId(ShapeId("foo", "Foo"))
-    }
-
-    val xml = """|<Foo>
-                 |   <x>1</x>
-                 |</Foo>""".stripMargin
-    checkDocument(xml, Foo(1))
-  }*/
-
-  /*  test("Document decoding: custom name") {
-    case class Foo(x: Int)
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x = int.required[Foo]("x", _)
-        struct(x)(Foo.apply).addHints(XmlName("F"))
-      }
-    }
-
-    val xml = """|<F>
-                 |   <x>1</x>
-                 |</F>""".stripMargin
-    checkDocument(xml, Foo(1))
-  }*/
-
-  /* test("Document decoding: failure") {
-    case class Foo(x: Int)
-    object Foo {
-      val schema: Schema[Foo] = {
-        val x = int.required[Foo]("x", _)
-        struct(x)(Foo.apply)
-      }.withId(ShapeId("foo", "Foo"))
-    }
-
-    val xml = """|<Bar>
-                 |   <x>1</x>
-                 |</Bar>""".stripMargin
-    parseDocument(xml)
-      .flatMap(decodeDocument[Foo](_))
-      .attempt
-      .map { result =>
-        expect.same(
-          result,
-          Left(
-            XmlDecodeError(XPath.root, "Expected Foo XML root element, got Bar")
-          )
-        )
-      }
-  }*/
-
 }
