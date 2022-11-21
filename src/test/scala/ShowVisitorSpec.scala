@@ -8,7 +8,7 @@ import smithy4s.schema.Schema._
 import weaver._
 import weaver.Expectations.Helpers.expect
 
-object ShowCodecSpec extends FunSuite {
+object ShowVisitorSpec extends FunSuite {
 
   val schemaVisitorShow = new SchemaVisitorShow()
 
