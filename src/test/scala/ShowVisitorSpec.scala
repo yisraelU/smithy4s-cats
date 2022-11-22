@@ -177,7 +177,7 @@ object ShowVisitorSpec extends FunSuite {
     val showOutput = schemaVisitorShow(Foo.schema).show(foo)
     expect.eql(showOutput, foo.toString)
   }
-  test("vector"){
+  test("vector") {
     case class Foo(foos: Vector[Int])
     object Foo {
       val schema: Schema[Foo] = {
@@ -190,7 +190,7 @@ object ShowVisitorSpec extends FunSuite {
     val showOutput = schemaVisitorShow(Foo.schema).show(foo)
     expect.eql(showOutput, foo.toString)
   }
-  test("indexedSeq"){
+  test("indexedSeq") {
     case class Foo(foos: IndexedSeq[Int])
     object Foo {
       val schema: Schema[Foo] = {
@@ -204,7 +204,7 @@ object ShowVisitorSpec extends FunSuite {
     expect.eql(showOutput, foo.toString)
   }
 
-  test("map"){
+  test("map") {
     case class Foo(foos: Map[String, Int])
     object Foo {
       val schema: Schema[Foo] = {
@@ -217,8 +217,6 @@ object ShowVisitorSpec extends FunSuite {
     val showOutput = schemaVisitorShow(Foo.schema).show(foo)
     expect.eql(showOutput, foo.toString)
   }
-
-
 
   test("recursion") {
     case class Foo(foo: Option[Foo])
@@ -243,24 +241,22 @@ object ShowVisitorSpec extends FunSuite {
       val intValue = int.oneOf[IntOrString]("intValue", IntValue(_))
       val stringValue = string.oneOf[IntOrString]("stringValue", StringValue(_))
       union(intValue, stringValue) {
-        case IntValue(int)     => intValue(int)
+        case IntValue(int)       => intValue(int)
         case StringValue(string) => stringValue(string)
       }.withId(ShapeId("", "Foo"))
     }
-    val foo0 =IntValue(1)
+    val foo0 = IntValue(1)
     val foo1 = StringValue("foo")
     val showOutput0 = schemaVisitorShow(schema).show(foo0)
     val showOutput1 = schemaVisitorShow(schema).show(foo1)
     expect.eql(showOutput0, "1")
     expect.eql(showOutput1, "foo")
 
-
-
   }
 
   test("enumeration") {
     sealed abstract class FooBar(val stringValue: String, val intValue: Int)
-      extends smithy4s.Enumeration.Value {
+        extends smithy4s.Enumeration.Value {
       val name = stringValue
       val value = stringValue
       val hints = Hints.empty
@@ -273,7 +269,7 @@ object ShowVisitorSpec extends FunSuite {
     }
     val foo = FooBar.Foo
     val showOutput = schemaVisitorShow(FooBar.schema).show(foo)
-    val  bar = FooBar.Bar
+    val bar = FooBar.Bar
     val showOutput1 = schemaVisitorShow(FooBar.schema).show(bar)
     expect.eql(showOutput, foo.stringValue)
     expect.eql(showOutput1, bar.stringValue)

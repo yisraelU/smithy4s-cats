@@ -7,6 +7,7 @@ lazy val root = (project in file("."))
     name := "smithy4s-cats",
     libraryDependencies ++= Seq("org.typelevel" %% "cats-core" % "2.9.0",
       "com.disneystreaming.smithy4s" %% "smithy4s-core" % "0.16.8",
+      "io.circe" %% "circe-core" % "0.14.3",
       "com.disneystreaming" %% "weaver-cats" % "0.8.0" % Test
   ),
     testFrameworks +=

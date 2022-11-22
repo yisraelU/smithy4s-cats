@@ -5,9 +5,13 @@ import cats.implicits.toContravariantOps
 import smithy4s.{~>, ByteArray, ShapeId, Timestamp}
 import smithy4s.schema.Primitive
 
+import scala.collection.immutable.ArraySeq
+
 trait HashInstances {
   implicit val byteArrayHash: Hash[ByteArray] =
-    Hash[Seq[Byte]].contramap(_.array.toSeq)
+    Hash[ArraySeq[Byte]].contramap { ba =>
+      ArraySeq.unsafeWrapArray(ba.array)
+    }
   implicit val documentHash: Hash[smithy4s.Document] =
     Hash[String].contramap(_.toString)
   implicit val shapeIdHash: Hash[ShapeId] = Hash[String].contramap(_.toString)
