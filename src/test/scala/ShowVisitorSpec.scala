@@ -1,3 +1,4 @@
+
 package smithy4s.cats
 
 import cats.effect.IO
@@ -10,7 +11,7 @@ import weaver.Expectations.Helpers.expect
 
 object ShowVisitorSpec extends FunSuite {
 
-  val schemaVisitorShow = new SchemaVisitorShow()
+  val schemaVisitorShow =  SchemaVisitorShow
 
   test("int") {
     val schema: Schema[Int] = int
@@ -275,3 +276,4 @@ object ShowVisitorSpec extends FunSuite {
     expect.eql(showOutput1, bar.stringValue)
   }
 }
+

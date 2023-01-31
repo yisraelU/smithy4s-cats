@@ -1,36 +1,16 @@
+
 package smithy4s.cats
 
 import cats.Hash
-import cats.implicits.{
-  catsKernelStdHashForList,
-  catsKernelStdHashForOption,
-  toContravariantOps
-}
-import smithy4s.schema.{
-  Alt,
-  CollectionTag,
-  EnumValue,
-  Field,
-  Primitive,
-  Schema,
-  SchemaAlt,
-  SchemaField,
-  SchemaVisitor
-}
-import smithy4s.{
-  ~>,
-  Bijection,
-  Timestamp,
-  ByteArray,
-  Existential,
-  Hints,
-  Lazy,
-  Refinement,
-  ShapeId
-}
+import cats.implicits.{catsKernelStdHashForList, catsKernelStdHashForOption, toContravariantOps}
+import smithy4s.schema.{Alt, CollectionTag, EnumValue, Field, Primitive, Schema, SchemaAlt, SchemaField, SchemaVisitor}
+import smithy4s.{~>, Bijection, ByteArray, Hints, Lazy, Refinement, ShapeId, Timestamp}
+import smithy4s.capability.EncoderK
 import smithy4s.cats.instances.HashInstances._
-class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
-  self =>
+import smithy4s.schema.Alt.Precompiler
+object SchemaVisitorHash  extends SchemaVisitor[Hash] {self =>
+
+
 
   override def primitive[P](
       shapeId: ShapeId,
@@ -38,7 +18,7 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
       tag: Primitive[P]
   ): Hash[P] = primHashPf(tag)
 
-  override def collection[C[`2`], A](
+  override def collection[C[_], A](
       shapeId: ShapeId,
       hints: Hints,
       tag: CollectionTag[C],
@@ -103,7 +83,7 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
             })
           hashField.contramap(field.get)
         }
-        fields.map(field => forField(field)).hashCode()
+        fields.map(field => forField(field)).map(hash => hash.hash(x)).sum
       }
       override def eqv(x: S, y: S): Boolean =
         self.struct(shapeId, hints, fields, make).eqv(x, y)
@@ -117,31 +97,22 @@ class SchemaVisitorHash extends SchemaVisitorEq with SchemaVisitor[Hash] {
       alternatives: Vector[SchemaAlt[U, _]],
       dispatch: Alt.Dispatcher[Schema, U]
   ): Hash[U] = {
-    new Hash[U] {
+        val precomputed: Precompiler[Schema, Hash] = new Precompiler[Schema,Hash] {
+          override def apply[A](label: String, instance: Schema[A]): Hash[A] =
+            self(instance)
+        }
+        implicit val encoderKHash: EncoderK[Hash, Int] = new EncoderK[Hash,Int] {
+          override def apply[A](fa: Hash[A], a: A): Int = fa.hash(a)
 
-      override def hash(x: U): Int = {
-        type F[A] = SchemaAlt[U, A]
-        val compileAlt = {
-          new (F ~> Hash) {
-            override def apply[A](fa: SchemaAlt[U, A]): Hash[A] =
-              fa.instance.compile(self)
+          override def absorb[A](f: A => Int): Hash[A] = new Hash[A] {
+            override def hash(x: A): Int = f(x)
+            override def eqv(x: A, y: A): Boolean = f(x) == f(y)
           }
         }
-        val precomputed =
-          compileAlt.unsafeCache(alternatives.map(Existential.wrap(_)))
 
-        def hash[A](altV: Alt.SchemaAndValue[U, A]): Int = {
-          precomputed(altV.alt).hash(
-            altV.value
-          )
-
-        }
-        hash(dispatch.underlying(x))
+        dispatch.compile(precomputed)
       }
-      override def eqv(x: U, y: U): Boolean =
-        self.union(shapeId, hints, alternatives, dispatch).eqv(x, y)
-    }
-  }
+
 
   override def biject[A, B](
       schema: Schema[A],

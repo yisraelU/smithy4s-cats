@@ -1,3 +1,4 @@
+/*
 package tests
 
 import cats.Id
@@ -77,3 +78,4 @@ object SchemaVisitorId extends SchemaVisitor[IdentityFunc] {
   override def lazily[A](suspend: Lazy[Schema[A]]): IdentityFunc[A] =
     liftIdentity[A]
 }
+ */

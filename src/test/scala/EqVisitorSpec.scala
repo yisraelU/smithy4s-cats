@@ -1,13 +1,13 @@
 import cats.kernel.Eq
-import smithy4s.cats.SchemaVisitorEq
 import smithy4s.schema.{Schema, SchemaVisitor}
 import smithy4s.schema.Schema._
 import smithy4s.{ByteArray, Hints, ShapeId, Timestamp}
+import smithy4s.cats.EqSchemaVisitor
 import weaver.{Expect, Expectations, FunSuite}
 
 object EqVisitorSpec extends FunSuite {
 
-  val visitor: SchemaVisitor[Eq] = new SchemaVisitorEq().visitorEq
+  val visitor: SchemaVisitor[Eq] =  EqSchemaVisitor
   test("int") {
     implicit val schema: Schema[Int] = int
     val int0 = 1

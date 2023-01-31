@@ -1,16 +1,19 @@
 package smithy4s.cats.instances
 
-import cats.Hash
+import cats.{Eq, Hash}
 import cats.implicits.toContravariantOps
 import smithy4s.{~>, ByteArray, ShapeId, Timestamp}
+import smithy4s.cats.instances.all.byteArrayEq
 import smithy4s.schema.Primitive
 
-import scala.collection.immutable.ArraySeq
-
 trait HashInstances {
+
   implicit val byteArrayHash: Hash[ByteArray] =
-    Hash[ArraySeq[Byte]].contramap { ba =>
-      ArraySeq.unsafeWrapArray(ba.array)
+    new Hash[ByteArray] {
+      override def hash(x: ByteArray): Int = x.array.hashCode()
+
+      override def eqv(x: ByteArray, y: ByteArray): Boolean =
+        Eq[ByteArray].eqv(x, y)
     }
   implicit val documentHash: Hash[smithy4s.Document] =
     Hash[String].contramap(_.toString)
